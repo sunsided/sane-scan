@@ -8,7 +8,7 @@ use bitflags::bitflags;
 use log::debug;
 use std::ffi::{c_void, CStr, CString};
 use std::fmt::{Debug, Display, Formatter};
-use std::ops::Range;
+use std::ops::Range as StdRange;
 
 type Result<T> = std::result::Result<T, Error>;
 
@@ -209,7 +209,7 @@ impl DeviceHandle {
 					type_: (*option_descriptor).type_,
 					unit: (*option_descriptor).unit,
 					size: (*option_descriptor).size as u32,
-					cap: OptionCapability::from_bits_unchecked((*option_descriptor).cap as u32),
+					cap: OptionCapability::from_bits((*option_descriptor).cap as u32).expect("invalid bit combination"),
 					constraint,
 				});
 			}
@@ -405,6 +405,7 @@ pub struct DeviceOption {
 }
 
 bitflags! {
+	#[derive(Debug)]
 	#[repr(transparent)]
 	pub struct OptionCapability: u32 {
 		const SOFT_SELECT = sys::CAP_SOFT_SELECT;
@@ -431,7 +432,7 @@ pub enum OptionConstraint {
 	None,
 	StringList(Vec<CString>),
 	WordList(Vec<i32>),
-	Range { range: Range<i32>, quant: i32 },
+	Range { range: StdRange<i32>, quant: i32 },
 }
 
 #[derive(Debug)]
